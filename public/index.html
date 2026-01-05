@@ -2,226 +2,141 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RoBits Hub</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoBits Game</title>
 <style>
-body {
-  margin: 0;
-  font-family: Inter, Arial, sans-serif;
-  background: radial-gradient(circle at top, #1aff7a, #050505 55%);
-  color: #eafff3;
-  min-height: 100vh;
-}
-
-.container {
-  max-width: 420px;
-  margin: auto;
-  padding: 40px 20px;
-}
-
-.card {
-  background: #0b0b0b;
-  border-radius: 14px;
-  padding: 22px;
-  box-shadow: 0 0 40px rgba(0,255,150,.15);
-  margin-bottom: 20px;
-}
-
-h1, h2 {
-  text-align: center;
-  margin-bottom: 14px;
-}
-
-input, button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
-  font-size: 15px;
-}
-
-input {
-  background: #111;
-  color: #eafff3;
-}
-
-button {
-  background: linear-gradient(135deg, #00ff99, #00cc66);
-  color: #000;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: .9;
-}
-
-.small {
-  font-size: 12px;
-  opacity: .7;
-  text-align: center;
-}
-
-.hidden {
-  display: none;
-}
-
-.panel {
-  background: #111;
-  border-radius: 10px;
-  padding: 14px;
-  margin-top: 14px;
-}
-
-.spin {
-  font-size: 18px;
-  margin-top: 12px;
-}
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f0, #000);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  #container {
+    background: rgba(0,0,0,0.8);
+    padding: 30px;
+    border-radius: 15px;
+    width: 320px;
+    text-align: center;
+  }
+  input, button {
+    margin: 8px 0;
+    padding: 10px;
+    width: 90%;
+    border-radius: 5px;
+    border: none;
+  }
+  button {
+    cursor: pointer;
+    background: #0f0;
+    color: #000;
+    font-weight: bold;
+  }
+  #app, #adminPanel { display: none; margin-top: 20px; }
+  #robits { font-size: 20px; font-weight: bold; margin: 10px 0; }
+  .panel { background: #111; padding: 10px; border-radius: 10px; margin-top: 10px; }
+  select { padding: 5px; border-radius: 5px; }
 </style>
 </head>
 <body>
 
-<div class="container">
-
-  <!-- LOGIN CARD -->
-  <div id="login" class="card">
-    <h1>RoBits Hub</h1>
-    <input id="username" placeholder="Roblox @username (NOT display name)">
-    <input id="password" type="password" placeholder="Site password (NOT Roblox)">
+<div id="container">
+  <h2>RoBits Game</h2>
+  
+  <div id="login">
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
     <button onclick="login()">Enter</button>
-    <p class="small">Fan-made demo system. Not affiliated with Roblox.</p>
   </div>
-
-  <!-- APP CARD -->
-  <div id="app" class="hidden">
-
-    <div class="card">
-      <h2>Balance</h2>
-      <p style="text-align:center;font-size:22px">
-        🟢 <span id="robits">0</span> RoBits
-      </p>
-      <button onclick="spin()">🎡 Spin Wheel</button>
-      <p class="spin" id="spinResult"></p>
+  
+  <div id="app">
+    <div id="robits">RoBits: 0</div>
+    <button onclick="spin()">Spin Wheel</button>
+    
+    <div class="panel" id="purchase">
+      <p>Purchase RoBits via Pls Donate → offline donation to <b>robloxclient37</b></p>
     </div>
 
-    <div class="card">
-      <h2>Buy RoBits</h2>
-      <button onclick="showDonate()">How to Purchase</button>
-      <div id="donatePanel" class="panel hidden">
-        Go to <b>Pls Donate</b><br>
-        Purchase an <b>offline donation</b><br>
-        To user: <b>robloxclient37</b>
-      </div>
+    <div id="adminPanel" class="panel">
+      <h3>Admin Panel</h3>
+      <input type="password" id="adminPass" placeholder="Admin Password"><br>
+      <input type="text" id="adminTarget" placeholder="Target Username"><br>
+      <input type="number" id="adminAmount" placeholder="Amount"><br>
+      <select id="adminAction">
+        <option value="give">Give RoBits</option>
+        <option value="take">Take RoBits</option>
+        <option value="ban">Ban User</option>
+        <option value="delete">Delete User</option>
+      </select><br>
+      <button onclick="adminDo()">Execute</button>
     </div>
-
-    <!-- ADMIN PANEL -->
-    <div id="adminCard" class="card hidden">
-      <h2>Admin Panel</h2>
-      <input id="adminUser" placeholder="Target username">
-      <input id="amount" placeholder="Amount">
-      <button onclick="give()">Give RoBits</button>
-      <button onclick="take()">Take RoBits</button>
-      <button onclick="ban()">Ban User</button>
-      <button onclick="del()">Delete Account</button>
-    </div>
-
   </div>
-
 </div>
 
 <script>
-// ==========================
-// CONFIG: YOUR WORKER URL
-// ==========================
 const api = "https://pls-bets.andysparent.workers.dev";
+let currentUser = "";
 
-let currentUser = null;
-
-// ==========================
-// LOGIN FUNCTION
-// ==========================
+// LOGIN
 async function login() {
   const u = document.getElementById("username").value.trim();
   const p = document.getElementById("password").value.trim();
-
-  if (!u || !p) return alert("Please fill in both fields!");
+  if(!u || !p) return alert("Please fill both fields.");
 
   try {
-    const res = await fetch(api + "/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ u, p })
+    const res = await fetch(api, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ action:"login", u, p })
     });
     const data = await res.json();
-    if (!data.ok) return alert(data.msg);
+    if(!data.ok) return alert(data.msg);
 
     currentUser = u;
-    document.getElementById("robits").textContent = data.robits;
+    document.getElementById("robits").textContent = "RoBits: " + data.robits;
     document.getElementById("login").style.display = "none";
-    document.getElementById("app").classList.remove("hidden");
-
-    if (data.admin) document.getElementById("adminCard").classList.remove("hidden");
-  } catch (err) {
-    alert("Error connecting to server. Make sure your Worker is deployed.");
-    console.error(err);
-  }
+    document.getElementById("app").style.display = "block";
+    if(data.admin) document.getElementById("adminPanel").style.display = "block";
+  } catch(err) { alert("Error connecting to server."); console.error(err); }
 }
 
-// ==========================
-// SPIN FUNCTION
-// ==========================
+// SPIN
 async function spin() {
   try {
-    const res = await fetch(api + "/spin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ u: currentUser })
+    const res = await fetch(api, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ action:"spin", u: currentUser })
     });
-    const d = await res.json();
-    if (!d.ok) return alert(d.msg);
-    document.getElementById("robits").textContent = d.robits;
-    document.getElementById("spinResult").textContent = "You won " + d.win + " RoBits!";
-  } catch (err) {
-    alert("Error spinning.");
-    console.error(err);
-  }
+    const data = await res.json();
+    if(!data.ok) return alert(data.msg);
+    alert("You won " + data.win + " RoBits!");
+    document.getElementById("robits").textContent = "RoBits: " + data.robits;
+  } catch(err){ alert("Error connecting to server."); console.error(err); }
 }
 
-// ==========================
-// DONATE PANEL
-// ==========================
-function showDonate() {
-  document.getElementById("donatePanel").classList.toggle("hidden");
-}
+// ADMIN
+async function adminDo() {
+  const adminPass = document.getElementById("adminPass").value.trim();
+  const target = document.getElementById("adminTarget").value.trim();
+  const amount = document.getElementById("adminAmount").value.trim();
+  const action = document.getElementById("adminAction").value;
 
-// ==========================
-// ADMIN FUNCTIONS
-// ==========================
-async function admin(action) {
+  if(!adminPass || !target) return alert("Admin password and target required.");
+
   try {
-    const res = await fetch(api + "/admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action,
-        adminPass: "8bitcrown",
-        target: document.getElementById("adminUser").value.trim(),
-        amount: document.getElementById("amount").value.trim()
-      })
+    const res = await fetch(api, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ action:"admin", adminAction:action, adminPass, target, amount })
     });
     const data = await res.json();
     alert(data.msg);
-  } catch (err) {
-    alert("Admin action failed.");
-    console.error(err);
-  }
+  } catch(err){ alert("Error connecting to server."); console.error(err); }
 }
-
-const give = () => admin("give");
-const take = () => admin("take");
-const ban = () => admin("ban");
-const del = () => admin("delete");
 </script>
 
 </body>
