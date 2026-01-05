@@ -128,34 +128,46 @@ button:hover {
 </div>
 
 <script>
+// ✅ Your Worker URL directly plugged in
+const api = "https://pls-bets.andysparent.workers.dev";
+
 let currentUser = null;
-const api = "https://pls-bets.andysparent.workers.dev/";
 
 async function login() {
   const u = username.value.trim();
   const p = password.value.trim();
-  const res = await fetch(api + "/login", {
-    method: "POST",
-    body: JSON.stringify({ u, p })
-  });
-  const data = await res.json();
-  if (!data.ok) return alert(data.msg);
-  currentUser = u;
-  robits.textContent = data.robits;
-  loginDiv = document.getElementById("login");
-  loginDiv.style.display = "none";
-  document.getElementById("app").classList.remove("hidden");
-  if (data.admin) document.getElementById("adminCard").classList.remove("hidden");
+  try {
+    const res = await fetch(api + "/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ u, p })
+    });
+    const data = await res.json();
+    if (!data.ok) return alert(data.msg);
+    currentUser = u;
+    robits.textContent = data.robits;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").classList.remove("hidden");
+    if (data.admin) document.getElementById("adminCard").classList.remove("hidden");
+  } catch (err) {
+    alert("Error connecting to server. Make sure your Worker is deployed.");
+    console.error(err);
+  }
 }
 
 async function spin() {
-  const res = await fetch(api + "/spin", {
-    method: "POST",
-    body: JSON.stringify({ u: currentUser })
-  });
-  const d = await res.json();
-  robits.textContent = d.robits;
-  spinResult.textContent = "You won " + d.win + " RoBits";
+  try {
+    const res = await fetch(api + "/spin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ u: currentUser })
+    });
+    const d = await res.json();
+    robits.textContent = d.robits;
+    spinResult.textContent = "You won " + d.win + " RoBits";
+  } catch (err) {
+    alert("Error spinning.");
+  }
 }
 
 function showDonate() {
@@ -163,16 +175,21 @@ function showDonate() {
 }
 
 async function admin(action) {
-  const res = await fetch(api + "/admin", {
-    method: "POST",
-    body: JSON.stringify({
-      action,
-      adminPass: "8bitcrown",
-      target: adminUser.value,
-      amount: amount.value
-    })
-  });
-  alert((await res.json()).msg);
+  try {
+    const res = await fetch(api + "/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        adminPass: "8bitcrown",
+        target: adminUser.value,
+        amount: amount.value
+      })
+    });
+    alert((await res.json()).msg);
+  } catch (err) {
+    alert("Admin action failed.");
+  }
 }
 
 const give = () => admin("give");
