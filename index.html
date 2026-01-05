@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RoBits Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: radial-gradient(circle at top, #1aff7a, #050505 55%);
+  color: #eafff3;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+.card {
+  background: #0b0b0b;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 0 40px rgba(0,255,150,.15);
+  margin-bottom: 20px;
+}
+
+h1, h2 {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+}
+
+input {
+  background: #111;
+  color: #eafff3;
+}
+
+button {
+  background: linear-gradient(135deg, #00ff99, #00cc66);
+  color: #000;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: .9;
+}
+
+.small {
+  font-size: 12px;
+  opacity: .7;
+  text-align: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.panel {
+  background: #111;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 14px;
+}
+
+.spin {
+  font-size: 18px;
+  margin-top: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div id="login" class="card">
+    <h1>RoBits Hub</h1>
+    <input id="username" placeholder="Roblox @username (NOT display name)">
+    <input id="password" type="password" placeholder="Site password (NOT Roblox)">
+    <button onclick="login()">Enter</button>
+    <p class="small">Fan-made demo system. Not affiliated with Roblox.</p>
+  </div>
+
+  <div id="app" class="hidden">
+
+    <div class="card">
+      <h2>Balance</h2>
+      <p style="text-align:center;font-size:22px">
+        🟢 <span id="robits">0</span> RoBits
+      </p>
+      <button onclick="spin()">🎡 Spin Wheel</button>
+      <p class="spin" id="spinResult"></p>
+    </div>
+
+    <div class="card">
+      <h2>Buy RoBits</h2>
+      <button onclick="showDonate()">How to Purchase</button>
+      <div id="donatePanel" class="panel hidden">
+        Go to <b>Pls Donate</b><br>
+        Purchase an <b>offline donation</b><br>
+        To user: <b>robloxclient37</b>
+      </div>
+    </div>
+
+    <div id="adminCard" class="card hidden">
+      <h2>Admin Panel</h2>
+      <input id="adminUser" placeholder="Target username">
+      <input id="amount" placeholder="Amount">
+      <button onclick="give()">Give RoBits</button>
+      <button onclick="take()">Take RoBits</button>
+      <button onclick="ban()">Ban User</button>
+      <button onclick="del()">Delete Account</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+let currentUser = null;
+const api = "YOUR_WORKER_URL_HERE";
+
+async function login() {
+  const u = username.value.trim();
+  const p = password.value.trim();
+  const res = await fetch(api + "/login", {
+    method: "POST",
+    body: JSON.stringify({ u, p })
+  });
+  const data = await res.json();
+  if (!data.ok) return alert(data.msg);
+  currentUser = u;
+  robits.textContent = data.robits;
+  loginDiv = document.getElementById("login");
+  loginDiv.style.display = "none";
+  document.getElementById("app").classList.remove("hidden");
+  if (data.admin) document.getElementById("adminCard").classList.remove("hidden");
+}
+
+async function spin() {
+  const res = await fetch(api + "/spin", {
+    method: "POST",
+    body: JSON.stringify({ u: currentUser })
+  });
+  const d = await res.json();
+  robits.textContent = d.robits;
+  spinResult.textContent = "You won " + d.win + " RoBits";
+}
+
+function showDonate() {
+  donatePanel.classList.toggle("hidden");
+}
+
+async function admin(action) {
+  const res = await fetch(api + "/admin", {
+    method: "POST",
+    body: JSON.stringify({
+      action,
+      adminPass: "8bitcrown",
+      target: adminUser.value,
+      amount: amount.value
+    })
+  });
+  alert((await res.json()).msg);
+}
+
+const give = () => admin("give");
+const take = () => admin("take");
+const ban = () => admin("ban");
+const del = () => admin("delete");
+</script>
+
+</body>
+</html>
