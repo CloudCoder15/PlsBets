@@ -2,142 +2,115 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>RoBits</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RoBits Game</title>
+
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #0f0, #000);
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  #container {
-    background: rgba(0,0,0,0.8);
-    padding: 30px;
-    border-radius: 15px;
-    width: 320px;
-    text-align: center;
-  }
-  input, button {
-    margin: 8px 0;
-    padding: 10px;
-    width: 90%;
-    border-radius: 5px;
-    border: none;
-  }
-  button {
-    cursor: pointer;
-    background: #0f0;
-    color: #000;
-    font-weight: bold;
-  }
-  #app, #adminPanel { display: none; margin-top: 20px; }
-  #robits { font-size: 20px; font-weight: bold; margin: 10px 0; }
-  .panel { background: #111; padding: 10px; border-radius: 10px; margin-top: 10px; }
-  select { padding: 5px; border-radius: 5px; }
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(135deg, #00ff66, #000);
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+#box {
+  background: #0b0b0b;
+  padding: 25px;
+  border-radius: 14px;
+  width: 330px;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(0,255,100,.3);
+}
+
+input, button, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  background: #00ff66;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #444;
+  cursor: not-allowed;
+}
+
+#app, #adminPanel {
+  display: none;
+  margin-top: 15px;
+}
+
+#robits {
+  font-size: 20px;
+  margin: 10px 0;
+}
 </style>
 </head>
-<body>
 
-<div id="container">
-  <h2>RoBits Game</h2>
-  
+<body>
+<div id="box">
+
+  <h2>RoBits</h2>
+
+  <!-- LOGIN -->
   <div id="login">
-    <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <button onclick="login()">Enter</button>
+    <input id="username" placeholder="Roblox username">
+    <input id="password" type="password" placeholder="Password (NOT Roblox)"
+      onkeydown="if(event.key==='Enter') login()">
+    <button type="button" onclick="login()">Enter</button>
   </div>
-  
+
+  <!-- APP -->
   <div id="app">
     <div id="robits">RoBits: 0</div>
-    <button onclick="spin()">Spin Wheel</button>
-    
-    <div class="panel" id="purchase">
-      <p>Purchase RoBits via Pls Donate → offline donation to <b>robloxclient37</b></p>
-    </div>
+    <button id="spinBtn" type="button" onclick="spin()">Spin (48h)</button>
+    <p id="spinMsg"></p>
 
-    <div id="adminPanel" class="panel">
-      <h3>Admin Panel</h3>
-      <input type="password" id="adminPass" placeholder="Admin Password"><br>
-      <input type="text" id="adminTarget" placeholder="Target Username"><br>
-      <input type="number" id="adminAmount" placeholder="Amount"><br>
+    <p style="font-size:12px">
+      Buy RoBits via Pls Donate<br>
+      Offline donation to <b>robloxclient37</b>
+    </p>
+
+    <!-- ADMIN -->
+    <div id="adminPanel">
+      <h3>Admin</h3>
+      <input id="adminPass" type="password" placeholder="Admin password">
+      <input id="adminTarget" placeholder="Target username">
+      <input id="adminAmount" type="number" placeholder="Amount">
       <select id="adminAction">
-        <option value="give">Give RoBits</option>
-        <option value="take">Take RoBits</option>
-        <option value="ban">Ban User</option>
-        <option value="delete">Delete User</option>
-      </select><br>
-      <button onclick="adminDo()">Execute</button>
+        <option value="give">Give</option>
+        <option value="take">Take</option>
+        <option value="ban">Ban</option>
+        <option value="delete">Delete</option>
+      </select>
+      <button type="button" onclick="adminDo()">Execute</button>
     </div>
   </div>
+
 </div>
 
 <script>
 const api = "https://pls-bets.andysparent.workers.dev";
 let currentUser = "";
 
-// LOGIN
+// ---------- LOGIN ----------
 async function login() {
-  const u = document.getElementById("username").value.trim();
-  const p = document.getElementById("password").value.trim();
-  if(!u || !p) return alert("Please fill both fields.");
+  const u = username.value.trim();
+  const p = password.value.trim();
+  if (!u || !p) return alert("Fill all fields");
 
-  try {
-    const res = await fetch(api, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ action:"login", u, p })
-    });
-    const data = await res.json();
-    if(!data.ok) return alert(data.msg);
-
-    currentUser = u;
-    document.getElementById("robits").textContent = "RoBits: " + data.robits;
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    if(data.admin) document.getElementById("adminPanel").style.display = "block";
-  } catch(err) { alert("Error connecting to server."); console.error(err); }
-}
-
-// SPIN
-async function spin() {
-  try {
-    const res = await fetch(api, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ action:"spin", u: currentUser })
-    });
-    const data = await res.json();
-    if(!data.ok) return alert(data.msg);
-    alert("You won " + data.win + " RoBits!");
-    document.getElementById("robits").textContent = "RoBits: " + data.robits;
-  } catch(err){ alert("Error connecting to server."); console.error(err); }
-}
-
-// ADMIN
-async function adminDo() {
-  const adminPass = document.getElementById("adminPass").value.trim();
-  const target = document.getElementById("adminTarget").value.trim();
-  const amount = document.getElementById("adminAmount").value.trim();
-  const action = document.getElementById("adminAction").value;
-
-  if(!adminPass || !target) return alert("Admin password and target required.");
-
-  try {
-    const res = await fetch(api, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ action:"admin", adminAction:action, adminPass, target, amount })
-    });
-    const data = await res.json();
-    alert(data.msg);
-  } catch(err){ alert("Error connecting to server."); console.error(err); }
-}
-</script>
-
-</body>
-</html>
+  const res = await fetch(api, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "login", u, p })
