@@ -84,6 +84,7 @@ button:hover {
 
 <div class="container">
 
+  <!-- LOGIN CARD -->
   <div id="login" class="card">
     <h1>RoBits Hub</h1>
     <input id="username" placeholder="Roblox @username (NOT display name)">
@@ -92,6 +93,7 @@ button:hover {
     <p class="small">Fan-made demo system. Not affiliated with Roblox.</p>
   </div>
 
+  <!-- APP CARD -->
   <div id="app" class="hidden">
 
     <div class="card">
@@ -113,6 +115,7 @@ button:hover {
       </div>
     </div>
 
+    <!-- ADMIN PANEL -->
     <div id="adminCard" class="card hidden">
       <h2>Admin Panel</h2>
       <input id="adminUser" placeholder="Target username">
@@ -128,11 +131,16 @@ button:hover {
 </div>
 
 <script>
-// ✅ Your Worker URL directly plugged in
+// ==========================
+// CONFIG: YOUR WORKER URL
+// ==========================
 const api = "https://pls-bets.andysparent.workers.dev";
 
 let currentUser = null;
 
+// ==========================
+// LOGIN FUNCTION
+// ==========================
 async function login() {
   const u = username.value.trim();
   const p = password.value.trim();
@@ -155,6 +163,9 @@ async function login() {
   }
 }
 
+// ==========================
+// SPIN FUNCTION
+// ==========================
 async function spin() {
   try {
     const res = await fetch(api + "/spin", {
@@ -167,13 +178,20 @@ async function spin() {
     spinResult.textContent = "You won " + d.win + " RoBits";
   } catch (err) {
     alert("Error spinning.");
+    console.error(err);
   }
 }
 
+// ==========================
+// DONATE PANEL
+// ==========================
 function showDonate() {
   donatePanel.classList.toggle("hidden");
 }
 
+// ==========================
+// ADMIN FUNCTIONS
+// ==========================
 async function admin(action) {
   try {
     const res = await fetch(api + "/admin", {
@@ -189,6 +207,7 @@ async function admin(action) {
     alert((await res.json()).msg);
   } catch (err) {
     alert("Admin action failed.");
+    console.error(err);
   }
 }
 
