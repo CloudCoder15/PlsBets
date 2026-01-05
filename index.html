@@ -142,8 +142,11 @@ let currentUser = null;
 // LOGIN FUNCTION
 // ==========================
 async function login() {
-  const u = username.value.trim();
-  const p = password.value.trim();
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+
+  if (!u || !p) return alert("Please fill in both fields!");
+
   try {
     const res = await fetch(api + "/login", {
       method: "POST",
@@ -152,10 +155,12 @@ async function login() {
     });
     const data = await res.json();
     if (!data.ok) return alert(data.msg);
+
     currentUser = u;
-    robits.textContent = data.robits;
+    document.getElementById("robits").textContent = data.robits;
     document.getElementById("login").style.display = "none";
     document.getElementById("app").classList.remove("hidden");
+
     if (data.admin) document.getElementById("adminCard").classList.remove("hidden");
   } catch (err) {
     alert("Error connecting to server. Make sure your Worker is deployed.");
@@ -174,8 +179,9 @@ async function spin() {
       body: JSON.stringify({ u: currentUser })
     });
     const d = await res.json();
-    robits.textContent = d.robits;
-    spinResult.textContent = "You won " + d.win + " RoBits";
+    if (!d.ok) return alert(d.msg);
+    document.getElementById("robits").textContent = d.robits;
+    document.getElementById("spinResult").textContent = "You won " + d.win + " RoBits!";
   } catch (err) {
     alert("Error spinning.");
     console.error(err);
@@ -186,7 +192,7 @@ async function spin() {
 // DONATE PANEL
 // ==========================
 function showDonate() {
-  donatePanel.classList.toggle("hidden");
+  document.getElementById("donatePanel").classList.toggle("hidden");
 }
 
 // ==========================
@@ -200,11 +206,12 @@ async function admin(action) {
       body: JSON.stringify({
         action,
         adminPass: "8bitcrown",
-        target: adminUser.value,
-        amount: amount.value
+        target: document.getElementById("adminUser").value.trim(),
+        amount: document.getElementById("amount").value.trim()
       })
     });
-    alert((await res.json()).msg);
+    const data = await res.json();
+    alert(data.msg);
   } catch (err) {
     alert("Admin action failed.");
     console.error(err);
@@ -219,4 +226,3 @@ const del = () => admin("delete");
 
 </body>
 </html>
-
